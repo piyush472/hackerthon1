@@ -176,20 +176,30 @@
 
 
     <!-- ============================================== -->
-    <!-- VIEW 3: SELECTION -->
-    <!-- ============================================== -->
-    <div id="view-selection" class="view-section bg-[var(--color-bg-dark)]">
-        <header class="fixed top-0 w-full z-50 px-8 py-6 flex items-center justify-between glass-card !border-x-0 !border-t-0 !rounded-none">
-            <div class="flex items-center gap-2 cursor-pointer" onclick="router.navigate('entry')">
-                <i data-lucide="feather" class="text-[var(--color-primary)]"></i>
-                <span class="font-display font-bold text-xl tracking-wide">KALADRISHTI</span>
-            </div>
-            <div class="text-sm uppercase tracking-widest text-[var(--color-text-muted)] hidden md:block">Select Form</div>
-        </header>
-        <main class="relative z-10 pt-32 pb-12 px-8 md:px-12 w-full max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="dance-grid"></div>
-        </main>
-    </div>
+<!-- VIEW 3: SELECTION -->
+<!-- ============================================== -->
+<div id="view-selection"
+     class="view-section relative bg-cover bg-center"
+     style="background-image: url('media/img/selection-bg.png');">
+
+    <!-- Dark overlay for readability -->
+    <div class="absolute inset-0 bg-black/70"></div>
+
+    <header class="fixed top-0 w-full z-50 px-8 py-6 flex items-center justify-between glass-card !border-x-0 !border-t-0 !rounded-none">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="router.navigate('entry')">
+            <i data-lucide="feather" class="text-[var(--color-primary)]"></i>
+            <span class="font-display font-bold text-xl tracking-wide">KALADRISHTI</span>
+        </div>
+        <div class="text-sm uppercase tracking-widest text-[var(--color-text-muted)] hidden md:block">
+            Select Form
+        </div>
+    </header>
+
+    <main class="relative z-10 pt-32 pb-12 px-8 md:px-12 w-full max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="dance-grid"></div>
+    </main>
+</div>
+
 
     <!-- ============================================== -->
 <!-- VIEW 4: DASHBOARD -->
