@@ -561,18 +561,24 @@ function resizeTutorial(action) {
         ];
 
         const state = {
-            view: 'landing',
-            dance: null,
-            lecture: null,
-            recording: false,
-            holistic: null,
-            camera: null,
-            mode: 'camera',
-            history: [],
-            currentScore: 0,
-            loopId: null,
-            showLandmarks: true
-        };
+    view: 'landing',
+    dance: null,
+    lecture: null,
+    recording: false,
+    holistic: null,
+    camera: null,
+    mode: 'camera',
+    history: [],
+    currentScore: 0,
+    loopId: null,
+    showLandmarks: true,
+
+    // 👇 ADD THESE
+    poseHoldStart: null,
+    poseConfirmed: false,
+    autoAdvanced: false
+};
+
 
         const router = {
             navigate: (viewId) => {
@@ -763,13 +769,22 @@ function resizeTutorial(action) {
                 if(state.mode === 'image') ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
                 
                 const analysis = app.analyzePosture(results.poseLandmarks); 
-                const feedbackColor = analysis > 75 ? '#00eaff' : '#ff3333'; 
+                let feedbackColor = '#ff3333'; // default RED
+
+if (
+    state.dance?.id === 'bharatanatyam' &&
+    state.lecture?.id === 1 &&
+    state.poseConfirmed
+) {
+    feedbackColor = '#00ff88'; // GREEN when Bhumi Pranam correct
+}
+ 
                 
                 // CONDITIONAL DRAWING BASED ON TOGGLE
                 if (state.showLandmarks) {
                     // 1. Pose: Body
                     drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: feedbackColor, lineWidth: 3});
-                    drawLandmarks(ctx, results.poseLandmarks, {color: '#eebc51', lineWidth: 1, radius: 3, fillColor: feedbackColor});
+                    drawLandmarks(ctx, results.poseLandmarks, {color: feedbackColor, lineWidth: 1, radius: 3, fillColor: feedbackColor});
 
                     // 2. Hands
                     drawConnectors(ctx, results.leftHandLandmarks, HAND_CONNECTIONS, {color: feedbackColor, lineWidth: 2});
@@ -782,7 +797,7 @@ function resizeTutorial(action) {
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_FACE_OVAL, {color: 'rgba(238, 188, 81, 0.5)', lineWidth: 1});
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_LEFT_EYE, {color: '#eebc51', lineWidth: 1});
                         drawConnectors(ctx, results.faceLandmarks, FACEMESH_RIGHT_EYE, {color: '#eebc51', lineWidth: 1});
-                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_LIPS, {color: '#ff3333', lineWidth: 1});
+                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_LIPS, {color: feedbackColor, lineWidth: 1});
                     }
                 }
                 
@@ -853,40 +868,60 @@ function resizeTutorial(action) {
             },
 
             analyzePosture: (landmarks) => {
-                if(!landmarks) return 0;
-                
-                const nose = landmarks[0];
-                const leftHip = landmarks[23];
-                const rightHip = landmarks[24];
-                const centerHip = (leftHip.x + rightHip.x)/2;
-                const spineScore = Math.max(0, 100 - (Math.abs(nose.x - centerHip) * 600));
-                
-                const leftShoulder = landmarks[11];
-                const rightShoulder = landmarks[12];
-                const shoulderScore = Math.max(0, 100 - (Math.abs(leftShoulder.y - rightShoulder.y) * 400));
-                
-                const leftElbow = landmarks[13];
-                const rightElbow = landmarks[14];
-                const armSpread = Math.abs(leftElbow.x - rightElbow.x);
-                const armScore = armSpread > 0.3 ? 100 : 50;
+                 if (!results.poseLandmarks || !results.leftHandLandmarks || !results.rightHandLandmarks) {
+        return { done: false, step: "Pose not visible" };
+    }
 
-                const finalScore = Math.floor((spineScore * 0.4) + (shoulderScore * 0.4) + (armScore * 0.2));
-                state.currentScore = finalScore;
-                
-                document.getElementById('val-posture').innerText = finalScore + "%";
-                document.getElementById('bar-posture').style.width = finalScore + "%";
-                
-                const feedback = document.getElementById('ai-feedback');
-                if(finalScore > 75) {
-                    feedback.innerText = "Excellent posture."; 
-                    feedback.className = "text-xs text-center italic text-green-400";
-                } else {
-                    feedback.innerText = "Adjust alignment."; 
-                    feedback.className = "text-xs text-center italic text-red-400";
-                }
-                
-                return finalScore;
-            },
+    const pose = results.poseLandmarks;
+    const leftHand = results.leftHandLandmarks;
+    const rightHand = results.rightHandLandmarks;
+
+    const nose = pose[0];
+    const leftShoulder = pose[11];
+    const rightShoulder = pose[12];
+    const leftHip = pose[23];
+    const rightHip = pose[24];
+    const leftAnkle = pose[27];
+    const rightAnkle = pose[28];
+
+    const leftPalm = leftHand[0];
+    const rightPalm = rightHand[0];
+
+    const palmDistance = Math.abs(leftPalm.x - rightPalm.x);
+    const chestY = (leftShoulder.y + rightShoulder.y) / 2;
+
+    const palmsAtChest =
+        palmDistance < 0.05 &&
+        Math.abs(leftPalm.y - chestY) < 0.08;
+
+    const hipCenterY = (leftHip.y + rightHip.y) / 2;
+    const torsoBent =
+        nose.y > chestY + 0.05 &&
+        nose.y < hipCenterY;
+
+    const ankleY = (leftAnkle.y + rightAnkle.y) / 2;
+    const handsNearFeet =
+        leftPalm.y > ankleY - 0.08 &&
+        rightPalm.y > ankleY - 0.08;
+
+    const now = Date.now();
+
+    if (palmsAtChest && torsoBent && handsNearFeet) {
+        if (!state.poseHoldStart) state.poseHoldStart = now;
+
+        const holdTime = (now - state.poseHoldStart) / 1000;
+
+        if (holdTime >= 2) {
+            state.poseConfirmed = true;
+            return { done: true, step: "Bhumi Pranam Completed" };
+        }
+
+        return { done: false, step: `Hold for ${(2 - holdTime).toFixed(1)}s` };
+    }
+
+    state.poseHoldStart = null;
+    return { done: false, step: "Form Bhumi Pranam posture" };
+},
 
             toggleRecording: () => {
     const btn = document.getElementById('btn-record');
