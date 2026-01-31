@@ -337,6 +337,11 @@
               <!-- LEFT SIDE TUTORIAL VIDEO -->
 <div id="practice-tutorial-video" 
      class="absolute top-20 left-8 w-72 bg-black rounded-xl overflow-hidden shadow-2xl z-30 cursor-move">
+<!-- Resize Controls -->
+<div class="absolute top-2 right-2 z-40 flex gap-1 bg-black/60 rounded-md p-1">
+    <button onclick="resizeTutorial('small')" class="px-2 text-white text-sm">−</button>
+    <button onclick="resizeTutorial('large')" class="px-2 text-white text-sm">+</button>
+</div>
 
     <video
         id="tutorialVideo"
@@ -385,6 +390,24 @@ document.addEventListener('mouseup', () => {
     isDragging = false;
 });
 </script>
+<script>
+let tutorialSize = 1; // 1 = normal
+
+function resizeTutorial(action) {
+    const box = document.getElementById('practice-tutorial-video');
+
+    if (action === 'large' && tutorialSize < 1.8) {
+        tutorialSize += 0.2;
+    }
+
+    if (action === 'small' && tutorialSize > 0.6) {
+        tutorialSize -= 0.2;
+    }
+
+    box.style.transform = `scale(${tutorialSize})`;
+}
+</script>
+
 
 
 
