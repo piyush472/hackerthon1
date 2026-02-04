@@ -805,8 +805,7 @@ calculateAngle: (A, B, C) => {
         const angle = Math.acos(dot / (magAB * magCB));
         return angle * (180 / Math.PI);
     },
- calculatePostureScore: (keypoints) => {
-
+calculatePostureScore: (keypoints) => {
         const leftShoulder = keypoints[5];
         const leftElbow = keypoints[7];
         const leftWrist = keypoints[9];
@@ -829,9 +828,7 @@ calculateAngle: (A, B, C) => {
         document.getElementById('bar-posture').style.width = score + "%";
 
         return score;
-    }
-
-};
+    },
 
             onResults: (results) => {
                 document.getElementById('ai-loading').style.display = 'none';
