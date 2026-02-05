@@ -17,8 +17,10 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- MediaPipe Holistic Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
 
     <!-- App Configuration & Styles -->
     <style>
@@ -551,12 +553,64 @@ function resizeTutorial(action) {
             { id: 'sattriya', name: 'Sattriya', img: 'media/img/SATTRIYA.png', origin: 'Assam' },
         ];
 
-        const LECTURES = [
-            { id: 1, title: 'Pranam (Salutation)', duration: '8 min', desc: 'Invocation of Mother Earth.' },
-            { id: 2, title: 'Aramandi (Stance)', duration: '15 min', desc: 'Half-seated posture basics.' },
-            { id: 3, title: 'Nritta Hastas', duration: '20 min', desc: 'Pure dance hand gestures.' },
-            { id: 4, title: 'Abhinaya (Expression)', duration: '25 min', desc: 'The nine emotions.' },
-        ];
+        const LECTURES = {
+    bharatanatyam: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/BH1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/BH2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/BH3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/BH4.mp4" },
+    ],
+
+    kathak: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/K1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/K2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/K3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/K4.mp4" },
+    ],
+
+    odissi: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/O1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/O2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/O3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/O4.mp4" },
+    ],
+
+    kuchipudi: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/KU1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/KU2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/KU3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/KU4.mp4" },
+    ],
+
+    kathakali: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/KA1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/KA2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/KA3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/KA4.mp4" },
+    ],
+
+    mohiniyattam: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/M1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/M2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/M3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/M4.mp4" },
+    ],
+
+    manipuri: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/MA1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/MA2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/MA3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/MA4.mp4" },
+    ],
+
+    sattriya: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/S1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/S2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/S3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/S4.mp4" },
+    ],
+};
+
 
         const state = {
     view: 'landing',
@@ -625,28 +679,65 @@ function resizeTutorial(action) {
             },
 
             selectDance: (id) => {
-                state.dance = DANCES.find(d => d.id === id);
-                document.getElementById('dashboard-title').innerText = state.dance.name;
-                document.getElementById('dashboard-hero-img').src = state.dance.img;
-                document.getElementById('lecture-list').innerHTML = LECTURES.map((l, i) => `
-                    <div onclick="app.selectLecture(${l.id})" class="glass-card p-6 rounded-sm flex items-center gap-6 cursor-pointer hover:bg-white/5 transition group border-l-4 border-transparent hover:border-l-[var(--color-primary)]">
-                        <div class="text-4xl font-display text-gray-600 group-hover:text-[var(--color-primary)] transition">0${i+1}</div>
-                        <div class="flex-grow">
-                            <h4 class="text-lg font-bold text-white group-hover:text-[var(--color-primary)] transition">${l.title}</h4>
-                            <p class="text-sm text-gray-400">${l.desc}</p>
-                        </div>
-                        <div class="px-3 py-1 border border-gray-700 rounded text-xs text-gray-400">${l.duration}</div>
-                    </div>
-                `).join('');
-                router.navigate('dashboard');
-            },
+
+    state.dance = DANCES.find(d => d.id === id);
+
+    document.getElementById('dashboard-title').innerText = state.dance.name;
+    document.getElementById('dashboard-hero-img').src = state.dance.img;
+
+    // 🔥 GET lectures of selected dance
+    const danceLectures = LECTURES[id];
+
+    if (!danceLectures) return; // safety check
+
+    document.getElementById('lecture-list').innerHTML =
+        danceLectures.map((l, i) => `
+            <div onclick="app.selectLecture(${l.id})"
+                class="glass-card p-6 rounded-sm flex items-center gap-6 cursor-pointer hover:bg-white/5 transition group border-l-4 border-transparent hover:border-l-[var(--color-primary)]">
+                
+                <div class="text-4xl font-display text-gray-600 group-hover:text-[var(--color-primary)] transition">
+                    0${i+1}
+                </div>
+
+                <div class="flex-grow">
+                    <h4 class="text-lg font-bold text-white group-hover:text-[var(--color-primary)] transition">
+                        ${l.title}
+                    </h4>
+                    <p class="text-sm text-gray-400">${l.desc}</p>
+                </div>
+
+                <div class="px-3 py-1 border border-gray-700 rounded text-xs text-gray-400">
+                    ${l.duration}
+                </div>
+            </div>
+        `).join('');
+
+    router.navigate('dashboard');
+},
+
 
             selectLecture: (id) => {
-                state.lecture = LECTURES.find(l => l.id === id);
-                document.getElementById('lecture-nav-title').innerText = state.lecture.title;
-                app.switchTab('tutorial');
-                router.navigate('lecture');
-            },
+
+    const danceLectures = LECTURES[state.dance.id];
+
+    state.lecture = danceLectures.find(l => l.id === id);
+
+    document.getElementById('lecture-nav-title').innerText = state.lecture.title;
+
+    // Update tutorial video
+    const tutorialVideo = document.querySelector("#content-tutorial video");
+    const practiceVideo = document.getElementById("tutorialVideo");
+
+    tutorialVideo.querySelector("source").src = state.lecture.video;
+    tutorialVideo.load();
+
+    practiceVideo.querySelector("source").src = state.lecture.video;
+    practiceVideo.load();
+
+    app.switchTab('tutorial');
+    router.navigate('lecture');
+},
+
 
             switchTab: (tab) => {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -684,75 +775,57 @@ function resizeTutorial(action) {
                 lucide.createIcons();
             },
 
-            initMoveNet: async () => {
-    const model = poseDetection.SupportedModels.MoveNet;
-
-    const detector = await poseDetection.createDetector(model, {
-        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
-    });
-
-    return detector;
-},
-
-
-           startCamera: async () => {
-    const video = document.getElementById("webcam");
-    const canvas = document.getElementById("output_canvas");
-    const ctx = canvas.getContext("2d");
-
-    // 🎥 Get webcam stream
-    const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
-        audio: false
-    });
-
-    video.srcObject = stream;
-
-    await new Promise(resolve => {
-        video.onloadedmetadata = () => resolve(video);
-    });
-
-    video.play();
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    // 🔥 Load MoveNet (only once)
-    if (!state.detector) {
-        state.detector = await app.initMoveNet();
-    }
-
-    // 🔁 Detection loop
-    const detectFrame = async () => {
-
-        if (video.readyState === 4) {
-
-            const poses = await state.detector.estimatePoses(video);
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if (poses.length > 0) {
-                const keypoints = poses[0].keypoints;
-
-                keypoints.forEach(point => {
-                    if (point.score > 0.4) {
-                        ctx.beginPath();
-                        ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
-                        ctx.fillStyle = "#eebc51";
-                        ctx.fill();
-                    }
+            initHolistic: () => {
+                const holistic = new Holistic({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`});
+                holistic.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    enableSegmentation: false, 
+                    smoothSegmentation: false,
+                    refineFaceLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
                 });
+                holistic.onResults(app.onResults);
+                return holistic;
+            },
 
-                app.calculatePostureScore(keypoints);
-            }
-        }
+            startCamera: async () => {
+                state.mode = 'camera';
+                const video = document.getElementById('webcam');
+                const placeholder = document.getElementById('camera-placeholder');
+                const loader = document.getElementById('ai-loading');
 
-        state.loopId = requestAnimationFrame(detectFrame);
-    };
+                placeholder.style.display = 'none';
+                loader.style.display = 'flex';
+                
+                try {
+                    // INSTANT START: Get stream and play immediately
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: 1280, height: 720, facingMode: "user" } 
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                    
+                    // START AI IN BACKGROUND
+                    if(!state.holistic) state.holistic = app.initHolistic();
+                    
+                    // Custom loop for control
+                    const sendFrame = async () => {
+                        if(state.mode === 'camera' && !video.paused && !video.ended) {
+                            await state.holistic.send({image: video});
+                            state.loopId = requestAnimationFrame(sendFrame);
+                        }
+                    };
+                    sendFrame();
 
-    detectFrame();
-},
-
+                } catch (e) {
+                    console.error(e);
+                    alert("Camera start failed. Please check permissions.");
+                    loader.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }
+            },
 
             handleImageUpload: (event) => {
                 const file = event.target.files[0];
@@ -771,64 +844,6 @@ function resizeTutorial(action) {
                 };
                 imgElement.classList.remove('hidden');
             },
-
-            onPoseResults: (pose) => {
-    const canvas = document.getElementById('output_canvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = webcam.videoWidth;
-    canvas.height = webcam.videoHeight;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const keypoints = pose.keypoints;
-
-    keypoints.forEach(point => {
-        if (point.score > 0.4) {
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
-            ctx.fillStyle = "#eebc51";
-            ctx.fill();
-        }
-    });
-
-    const score = app.calculatePostureScore(keypoints);
-},
-calculateAngle: (A, B, C) => {
-        const AB = { x: A.x - B.x, y: A.y - B.y };
-        const CB = { x: C.x - B.x, y: C.y - B.y };
-
-        const dot = (AB.x * CB.x + AB.y * CB.y);
-        const magAB = Math.sqrt(AB.x**2 + AB.y**2);
-        const magCB = Math.sqrt(CB.x**2 + CB.y**2);
-
-        const angle = Math.acos(dot / (magAB * magCB));
-        return angle * (180 / Math.PI);
-    },
-calculatePostureScore: (keypoints) => {
-        const leftShoulder = keypoints[5];
-        const leftElbow = keypoints[7];
-        const leftWrist = keypoints[9];
-
-        const angle = app.calculateAngle(
-            leftShoulder,
-            leftElbow,
-            leftWrist
-        );
-
-        let score = 0;
-
-        if (angle > 150 && angle < 170) {
-            score = 100;
-        } else {
-            score = 50;
-        }
-
-        document.getElementById('val-posture').innerText = score + "%";
-        document.getElementById('bar-posture').style.width = score + "%";
-
-        return score;
-    },
 
             onResults: (results) => {
                 document.getElementById('ai-loading').style.display = 'none';
