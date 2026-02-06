@@ -225,8 +225,7 @@
     <!-- ============================================== -->
 <!-- VIEW 4: DASHBOARD -->
 <!-- ============================================== -->
-<div id="view-dashboard" class="view-section relative h-screen ...">
-
+<div id="view-dashboard" class="view-section relative h-screen w-full overflow-hidden bg-[var(--color-bg-dark)] hidden">
 
     <div class="absolute inset-0 z-0">
         <img
@@ -493,18 +492,706 @@ function resizeTutorial(action) {
         </div>
     </div>
 
-<script src="./js/data.js"></script>
-<script src="./js/state.js"></script>
-<script src="./js/db.js"></script>
-<script src="./js/api.js"></script>
-<script src="./js/router.js"></script>
-<script src="./js/app.js"></script>
+    <!-- ============================================== -->
+    <!-- JAVASCRIPT LOGIC -->
+    <!-- ============================================== -->
+    <script>
+        // --- API INTEGRATION CLASS ---
+        class KaladrishtiAPI {
+            constructor(baseUrl) {
+                this.baseUrl = baseUrl || 'https://api.kaladrishti.com/v1'; // Placeholder
+            }
+
+            // Simulates sending video/pose data to backend
+            async sendAnalysisData(sessionData) {
+                console.log("Sending data to API:", sessionData);
+                
+                // MOCK API DELAY & RESPONSE
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        // Mocking logic: Score calculated locally but verified by "server"
+                        const isVerified = sessionData.score > 70;
+                        resolve({
+                            status: 200,
+                            data: {
+                                verified: isVerified,
+                                serverMessage: isVerified ? "Excellent alignment verified." : "Improvement needed in posture.",
+                                correctionPoints: ["Spine straightness", "Elbow height"]
+                            }
+                        });
+                    }, 5000);
+                });
+            }
+        }
+        const api = new KaladrishtiAPI();
+
+        // --- DATABASE SERVICE ---
+        class MongoService {
+            constructor(collectionName) {
+                this.collection = collectionName;
+                this.storageKey = `mongodb_${collectionName}`;
+            }
+            async find() { return JSON.parse(localStorage.getItem(this.storageKey)) || []; }
+            async insertOne(doc) {
+                const data = await this.find();
+                const newDoc = { ...doc, _id: Date.now().toString(), timestamp: new Date() };
+                data.unshift(newDoc);
+                localStorage.setItem(this.storageKey, JSON.stringify(data));
+                return newDoc;
+            }
+        }
+        const practiceSessionsDB = new MongoService('sessions');
+
+        const DANCES = [
+            { id: 'bharatanatyam', name: 'Bharatanatyam', img: 'media/img/BHARATNATYAM.png', origin: 'Tamil Nadu' },
+            { id: 'kathak', name: 'Kathak', img: 'media/img/KATHAK.png', origin: 'North India' },
+            { id: 'odissi', name: 'Odissi', img: 'media/img/ODISSI.png', origin: 'Odisha' },
+            { id: 'kuchipudi', name: 'Kuchipudi', img: 'media/img/KUCHIPUDI.png', origin: 'Andhra Pradesh' },
+            { id: 'kathakali', name: 'Kathakali', img: 'media/img/KATHAKALI.png', origin: 'Kerala' },
+            { id: 'mohiniyattam', name: 'Mohiniyattam', img: 'media/img/MOHINIYATTAM.png', origin: 'Kerala' },
+            { id: 'manipuri', name: 'Manipuri', img: 'media/img/MANIPURI.png', origin: 'Manipur' },
+            { id: 'sattriya', name: 'Sattriya', img: 'media/img/SATTRIYA.png', origin: 'Assam' },
+        ];
+
+        const LECTURES = {
+    bharatanatyam: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/BH1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/BH2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/BH3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/BH4.mp4" },
+    ],
+
+    kathak: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/K1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/K2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/K3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/K4.mp4" },
+    ],
+
+    odissi: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/O1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/O2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/O3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/O4.mp4" },
+    ],
+
+    kuchipudi: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/KU1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/KU2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/KU3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/KU4.mp4" },
+    ],
+
+    kathakali: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/KA1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/KA2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/KA3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/KA4.mp4" },
+    ],
+
+    mohiniyattam: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/M1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/M2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/M3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/M4.mp4" },
+    ],
+
+    manipuri: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/MA1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/MA2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/MA3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/MA4.mp4" },
+    ],
+
+    sattriya: [
+        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/S1.mp4" },
+        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/S2.mp4" },
+        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/S3.mp4" },
+        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/S4.mp4" },
+    ],
+};
 
 
-<script>
-    lucide.createIcons();
-</script>
+        const state = {
+    view: 'landing',
+    dance: null,
+    lecture: null,
+    recording: false,
+    holistic: null,
+    camera: null,
+    mode: 'camera',
+    history: [],
+    currentScore: 0,
+    loopId: null,
+    showLandmarks: true,
+
+    // 👇 ADD THESE (NEW)
+    poseHoldStart: null,
+    poseConfirmed: false,
+    autoAdvanced: false
+};
 
 
+        const router = {
+            navigate: (viewId) => {
+                document.querySelectorAll('.view-section').forEach(el => {
+                    el.classList.remove('active');
+                    if(el.classList.contains('animate-fade-up')) {
+                        el.classList.remove('animate-fade-up');
+                        void el.offsetWidth;
+                        el.classList.add('animate-fade-up');
+                    }
+                });
+                document.getElementById(`view-${viewId}`).classList.add('active');
+                state.view = viewId;
+                if(viewId !== 'lecture') app.stopCamera();
+                if(viewId === 'dashboard') {
+                    // Reset tab when entering new dashboard
+                    app.switchTab('tutorial'); 
+                }
+                window.scrollTo(0,0);
+            }
+        };
+
+        const app = {
+            init: async () => {
+                lucide.createIcons();
+                app.renderDances();
+                state.history = await practiceSessionsDB.find();
+                setTimeout(() => {
+                    document.getElementById('view-landing').style.display = 'none';
+                    router.navigate('entry');
+                }, 3000);
+            },
+
+            renderDances: () => {
+                const grid = document.getElementById('dance-grid');
+                grid.innerHTML = DANCES.map(d => `
+                    <div onclick="app.selectDance('${d.id}')" class="group relative h-52 rounded-sm overflow-hidden cursor-pointer shadow-2xl border border-white/5 hover:border-[var(--color-primary)] transition-all">
+                        <img src="${d.img}" class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="${d.name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1518131393663-39c2f6d62325?q=80&w=600'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
+                        <div class="absolute bottom-0 left-0 p-6">
+                            <p class="text-[var(--color-primary)] text-xs font-bold uppercase tracking-widest mb-1">${d.origin}</p>
+                            <h3 class="text-2xl font-display text-white mb-2 group-hover:translate-x-2 transition-transform">${d.name}</h3>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            selectDance: (id) => {
+
+    state.dance = DANCES.find(d => d.id === id);
+
+    document.getElementById('dashboard-title').innerText = state.dance.name;
+    document.getElementById('dashboard-hero-img').src = state.dance.img;
+
+    // 🔥 GET lectures of selected dance
+    const danceLectures = LECTURES[id];
+
+    if (!danceLectures) return; // safety check
+
+    document.getElementById('lecture-list').innerHTML =
+        danceLectures.map((l, i) => `
+            <div onclick="app.selectLecture(${l.id})"
+                class="glass-card p-6 rounded-sm flex items-center gap-6 cursor-pointer hover:bg-white/5 transition group border-l-4 border-transparent hover:border-l-[var(--color-primary)]">
+                
+                <div class="text-4xl font-display text-gray-600 group-hover:text-[var(--color-primary)] transition">
+                    0${i+1}
+                </div>
+
+                <div class="flex-grow">
+                    <h4 class="text-lg font-bold text-white group-hover:text-[var(--color-primary)] transition">
+                        ${l.title}
+                    </h4>
+                    <p class="text-sm text-gray-400">${l.desc}</p>
+                </div>
+
+                <div class="px-3 py-1 border border-gray-700 rounded text-xs text-gray-400">
+                    ${l.duration}
+                </div>
+            </div>
+        `).join('');
+
+    router.navigate('dashboard');
+},
+
+
+            selectLecture: (id) => {
+
+    const danceLectures = LECTURES[state.dance.id];
+
+    state.lecture = danceLectures.find(l => l.id === id);
+
+    document.getElementById('lecture-nav-title').innerText = state.lecture.title;
+
+    // Update tutorial video
+    const tutorialVideo = document.querySelector("#content-tutorial video");
+    const practiceVideo = document.getElementById("tutorialVideo");
+
+    tutorialVideo.querySelector("source").src = state.lecture.video;
+    tutorialVideo.load();
+
+    practiceVideo.querySelector("source").src = state.lecture.video;
+    practiceVideo.load();
+
+    app.switchTab('tutorial');
+    router.navigate('lecture');
+},
+
+
+            switchTab: (tab) => {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`content-${tab}`).classList.remove('hidden');
+                
+                ['tutorial', 'practice', 'results'].forEach(t => {
+                    const btn = document.getElementById(`tab-${t}`);
+                    if(t === tab) {
+                        btn.classList.add('bg-[var(--color-primary)]', 'text-black');
+                        btn.classList.remove('text-gray-400');
+                    } else {
+                        btn.classList.remove('bg-[var(--color-primary)]', 'text-black');
+                        btn.classList.add('text-gray-400');
+                    }
+                });
+
+                if(tab === 'practice') { /* Camera handled by button */ } 
+                else { app.stopCamera(); }
+                
+                if(tab === 'results') app.renderResults();
+            },
+
+            toggleLandmarks: () => {
+                state.showLandmarks = !state.showLandmarks;
+                const btn = document.getElementById('btn-toggle-landmarks');
+                if(state.showLandmarks) {
+                    btn.classList.remove('bg-red-500/80');
+                    btn.classList.add('bg-gray-800/80');
+                    btn.innerHTML = `<i data-lucide="eye" class="w-6 h-6"></i>`;
+                } else {
+                    btn.classList.remove('bg-gray-800/80');
+                    btn.classList.add('bg-red-500/80');
+                    btn.innerHTML = `<i data-lucide="eye-off" class="w-6 h-6"></i>`;
+                }
+                lucide.createIcons();
+            },
+
+            initHolistic: () => {
+                const holistic = new Holistic({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`});
+                holistic.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    enableSegmentation: false, 
+                    smoothSegmentation: false,
+                    refineFaceLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                holistic.onResults(app.onResults);
+                return holistic;
+            },
+
+            startCamera: async () => {
+                state.mode = 'camera';
+                const video = document.getElementById('webcam');
+                const placeholder = document.getElementById('camera-placeholder');
+                const loader = document.getElementById('ai-loading');
+
+                placeholder.style.display = 'none';
+                loader.style.display = 'flex';
+                
+                try {
+                    // INSTANT START: Get stream and play immediately
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: 1280, height: 720, facingMode: "user" } 
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                    
+                    // START AI IN BACKGROUND
+                    if(!state.holistic) state.holistic = app.initHolistic();
+                    
+                    // Custom loop for control
+                    const sendFrame = async () => {
+                        if(state.mode === 'camera' && !video.paused && !video.ended) {
+                            await state.holistic.send({image: video});
+                            state.loopId = requestAnimationFrame(sendFrame);
+                        }
+                    };
+                    sendFrame();
+
+                } catch (e) {
+                    console.error(e);
+                    alert("Camera start failed. Please check permissions.");
+                    loader.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }
+            },
+
+            handleImageUpload: (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                state.mode = 'image';
+                if (state.loopId) cancelAnimationFrame(state.loopId);
+                const imgElement = document.getElementById('static-image-source');
+                imgElement.src = URL.createObjectURL(file);
+                document.getElementById('camera-placeholder').style.display = 'none';
+                document.getElementById('ai-loading').style.display = 'flex';
+                imgElement.onload = async () => {
+                    if(!state.holistic) state.holistic = app.initHolistic();
+                    await state.holistic.send({image: imgElement});
+                    document.getElementById('ai-loading').style.display = 'none';
+                    document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
+                };
+                imgElement.classList.remove('hidden');
+            },
+
+            onResults: (results) => {
+                document.getElementById('ai-loading').style.display = 'none';
+                const canvas = document.getElementById('output_canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = results.image.width;
+                canvas.height = results.image.height;
+                state.mode === 'image' ? canvas.classList.remove('mirror-mode') : canvas.classList.add('mirror-mode');
+                
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if(state.mode === 'image') ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+                
+                const analysis = app.analyzePosture(results.poseLandmarks); 
+                let feedbackColor = analysis > 75 ? '#00eaff' : '#ff3333';
+
+if (
+    state.dance?.id === 'bharatanatyam' &&
+    state.lecture?.id === 1 &&
+    state.poseConfirmed
+) {
+    feedbackColor = '#00ff88'; // GREEN
+}
+ 
+                
+                // CONDITIONAL DRAWING BASED ON TOGGLE
+                if (state.showLandmarks) {
+                    // 1. Pose: Body
+                    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color: feedbackColor, lineWidth: 3});
+                    drawLandmarks(ctx, results.poseLandmarks, {color: '#eebc51', lineWidth: 1, radius: 3, fillColor: feedbackColor});
+
+                    // 2. Hands
+                    drawConnectors(ctx, results.leftHandLandmarks, HAND_CONNECTIONS, {color: feedbackColor, lineWidth: 2});
+                    drawLandmarks(ctx, results.leftHandLandmarks, {color: '#eebc51', lineWidth: 1, radius: 2});
+                    drawConnectors(ctx, results.rightHandLandmarks, HAND_CONNECTIONS, {color: feedbackColor, lineWidth: 2});
+                    drawLandmarks(ctx, results.rightHandLandmarks, {color: '#eebc51', lineWidth: 1, radius: 2});
+
+                    // 3. Face: Only KEY Features (No full mesh)
+                    if (results.faceLandmarks) {
+                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_FACE_OVAL, {color: 'rgba(238, 188, 81, 0.5)', lineWidth: 1});
+                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_LEFT_EYE, {color: '#eebc51', lineWidth: 1});
+                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_RIGHT_EYE, {color: '#eebc51', lineWidth: 1});
+                        drawConnectors(ctx, results.faceLandmarks, FACEMESH_LIPS, {color: '#ff3333', lineWidth: 1});
+                    }
+                }
+                
+                ctx.restore();
+
+                app.analyzeExpression(results.faceLandmarks);
+                // --- BHUMI PRANAM LOGIC (ONLY Lecture 1) ---
+if (
+    state.dance?.id === 'bharatanatyam' &&
+    state.lecture?.id === 1
+) {
+    const bhumi = app.detectBhumiPranam(results);
+    const feedback = document.getElementById('ai-feedback');
+
+    if (bhumi.done) {
+        feedback.innerText = bhumi.step;
+        feedback.className = "text-xs text-center italic text-green-400";
+
+        // GREEN skeleton when correct
+        state.currentScore = 100;
+
+        // Auto next lecture
+        if (!state.autoAdvanced) {
+            state.autoAdvanced = true;
+            setTimeout(() => app.selectLecture(2), 1500);
+        }
+    } else {
+        feedback.innerText = bhumi.step;
+        feedback.className = "text-xs text-center italic text-yellow-400";
+    }
+}
+
+                
+                const statusInd = document.getElementById('status-indicator');
+                if (analysis > 75) statusInd.classList.replace('bg-red-500', 'bg-green-500') || statusInd.classList.add('bg-green-500');
+                else statusInd.classList.replace('bg-green-500', 'bg-red-500') || statusInd.classList.add('bg-red-500');
+
+                document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
+                document.getElementById('cam-controls').style.opacity = '1';
+                document.getElementById('cam-controls').style.pointerEvents = 'auto';
+            },
+
+            stopCamera: () => {
+                if(state.loopId) cancelAnimationFrame(state.loopId);
+                const video = document.getElementById('webcam');
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(t => t.stop());
+                    video.srcObject = null;
+                }
+                
+                document.getElementById('camera-placeholder').style.display = 'flex';
+                document.getElementById('ai-panel').classList.add('translate-x-[150%]');
+                document.getElementById('cam-controls').style.opacity = '0';
+                document.getElementById('static-image-source').classList.add('hidden');
+                
+                const cvs = document.getElementById('output_canvas');
+                const ctx = cvs.getContext('2d');
+                ctx.clearRect(0,0,cvs.width,cvs.height);
+            },
+
+             analyzeExpression: (landmarks) => {
+                if(!landmarks) return;
+                
+                // MOUTH OPEN
+                const upper = landmarks[13]; const lower = landmarks[14];
+                const open = Math.abs(upper.y - lower.y);
+
+                // SMILE (Mouth width)
+                const leftM = landmarks[61]; const rightM = landmarks[291];
+                const smile = Math.abs(leftM.x - rightM.x);
+
+                // EYEBROWS (Anger/Surprise)
+                const browL = landmarks[107]; const browR = landmarks[336]; // Top of brows
+                const eyeL = landmarks[159]; const eyeR = landmarks[386]; // Top of eyes
+                const browDist = (Math.abs(browL.y - eyeL.y) + Math.abs(browR.y - eyeR.y)) / 2;
+
+                const el = document.getElementById('val-expression');
+                const bar = document.getElementById('bar-expression');
+                
+                // Logic Thresholds (Approx)
+                if (open > 0.08) {
+                    el.innerText = "Surprise / Chanting"; el.style.color = "#eebc51"; 
+                    bar.style.width = "90%"; bar.className = "h-full w-0 transition-all duration-300 bg-yellow-500";
+                } else if (smile > 0.5) {
+                    el.innerText = "Joy (Hasya)"; el.style.color = "#4ade80"; 
+                    bar.style.width = "100%"; bar.className = "h-full w-0 transition-all duration-300 bg-green-500";
+                } else if (browDist < 0.02) {
+                    el.innerText = "Anger (Raudra)"; el.style.color = "#ff3333"; 
+                    bar.style.width = "80%"; bar.className = "h-full w-0 transition-all duration-300 bg-red-600";
+                } else {
+                    el.innerText = "Serene / Neutral"; el.style.color = "white"; 
+                    bar.style.width = "30%"; bar.className = "h-full w-0 transition-all duration-300 bg-purple-500";
+                }
+            },
+
+            analyzePosture: (landmarks) => {
+                if(!landmarks) return 0;
+                
+                const nose = landmarks[0];
+                const leftHip = landmarks[23];
+                const rightHip = landmarks[24];
+                const centerHip = (leftHip.x + rightHip.x)/2;
+                const spineScore = Math.max(0, 100 - (Math.abs(nose.x - centerHip) * 600));
+                
+                const leftShoulder = landmarks[11];
+                const rightShoulder = landmarks[12];
+                const shoulderScore = Math.max(0, 100 - (Math.abs(leftShoulder.y - rightShoulder.y) * 400));
+                
+                const leftElbow = landmarks[13];
+                const rightElbow = landmarks[14];
+                const armSpread = Math.abs(leftElbow.x - rightElbow.x);
+                const armScore = armSpread > 0.3 ? 100 : 50;
+
+                const finalScore = Math.floor((spineScore * 0.4) + (shoulderScore * 0.4) + (armScore * 0.2));
+                state.currentScore = finalScore;
+                
+                document.getElementById('val-posture').innerText = finalScore + "%";
+                document.getElementById('bar-posture').style.width = finalScore + "%";
+                
+                const feedback = document.getElementById('ai-feedback');
+                if(finalScore > 75) {
+                    feedback.innerText = "Excellent posture."; 
+                    feedback.className = "text-xs text-center italic text-green-400";
+                } else {
+                    feedback.innerText = "Adjust alignment."; 
+                    feedback.className = "text-xs text-center italic text-red-400";
+                }
+                
+                return finalScore;
+            },
+            detectBhumiPranam: (results) => {
+    if (!results.poseLandmarks || !results.leftHandLandmarks || !results.rightHandLandmarks) {
+        return { done: false, step: "Pose not visible" };
+    }
+
+    const pose = results.poseLandmarks;
+    const leftHand = results.leftHandLandmarks;
+    const rightHand = results.rightHandLandmarks;
+
+    const nose = pose[0];
+    const leftShoulder = pose[11];
+    const rightShoulder = pose[12];
+    const leftHip = pose[23];
+    const rightHip = pose[24];
+    const leftAnkle = pose[27];
+    const rightAnkle = pose[28];
+
+    const leftPalm = leftHand[0];
+    const rightPalm = rightHand[0];
+
+    // Step 1: Anjali Hasta
+    const palmDistance = Math.abs(leftPalm.x - rightPalm.x);
+    const chestY = (leftShoulder.y + rightShoulder.y) / 2;
+    const palmsAtChest =
+        palmDistance < 0.05 &&
+        Math.abs(leftPalm.y - chestY) < 0.08;
+
+    // Step 2: Bow
+    const hipCenterY = (leftHip.y + rightHip.y) / 2;
+    const torsoBent =
+        nose.y > chestY + 0.05 &&
+        nose.y < hipCenterY;
+
+    // Step 3: Earth touch
+    const ankleY = (leftAnkle.y + rightAnkle.y) / 2;
+    const handsNearFeet =
+        leftPalm.y > ankleY - 0.08 &&
+        rightPalm.y > ankleY - 0.08;
+
+    const now = Date.now();
+
+    if (palmsAtChest && torsoBent && handsNearFeet) {
+        if (!state.poseHoldStart) state.poseHoldStart = now;
+
+        const holdTime = (now - state.poseHoldStart) / 1000;
+        if (holdTime >= 2) {
+            state.poseConfirmed = true;
+            return { done: true, step: "Bhumi Pranam Completed 🙏" };
+        }
+        return { done: false, step: `Hold for ${(2 - holdTime).toFixed(1)}s` };
+    }
+
+    state.poseHoldStart = null;
+    state.poseConfirmed = false;
+    return { done: false, step: "Perform Bhumi Pranam steps" };
+},
+
+
+            toggleRecording: () => {
+    const btn = document.getElementById('btn-record');
+    const inner = btn.querySelector('div');
+    const video = document.getElementById('webcam');
+
+    state.recording = !state.recording;
+
+    if (state.recording) {
+        inner.className = "w-6 h-6 bg-white rounded-sm animate-pulse";
+        btn.classList.add("scale-110", "ring-4", "ring-red-900");
+
+        // Initialize recording
+        state.recordedChunks = [];
+        if (!video.srcObject) return alert("Camera not started!");
+        
+        state.mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: "video/webm" });
+
+        state.mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) state.recordedChunks.push(e.data);
+        };
+
+        state.mediaRecorder.onstop = () => {
+            const blob = new Blob(state.recordedChunks, { type: "video/webm" });
+            const url = URL.createObjectURL(blob);
+
+            // Auto-download the video
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `${state.dance?.name || 'dance'}-${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        state.mediaRecorder.start();
+        state.recordStartTime = new Date();
+
+    } else {
+        inner.className = "w-6 h-6 bg-white rounded-sm";
+        btn.classList.remove("scale-110", "ring-4", "ring-red-900");
+
+        if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
+            state.mediaRecorder.stop();
+        }
+
+        // Submit data to database as before
+        app.submitToDatabase();
+    }
+}
+,
+
+            submitToDatabase: async () => {
+                const modal = document.getElementById('processing-modal');
+                modal.classList.remove('hidden');
+                
+                const duration = Math.round((new Date() - state.recordStartTime) / 1000);
+                const payload = {
+                    userId: 'user_123',
+                    lectureId: state.lecture.id,
+                    score: state.currentScore,
+                    duration: duration,
+                    timestamp: new Date().toISOString()
+                };
+
+                const apiResponse = await api.sendAnalysisData(payload);
+                
+                await practiceSessionsDB.insertOne({
+                    dance: state.dance.name,
+                    lecture: state.lecture.title,
+                    duration: `${Math.floor(duration/60)}m ${duration%60}s`,
+                    score: state.currentScore,
+                    status: apiResponse.data.verified ? "Verified ✅" : "Correction Needed ⚠️"
+                });
+                
+                state.history = await practiceSessionsDB.find();
+                modal.classList.add('hidden');
+                app.switchTab('results'); 
+            },
+
+            renderResults: () => {
+                const container = document.getElementById('results-list');
+                const totalDisplay = document.getElementById('total-score-display');
+                totalDisplay.innerText = state.history.length;
+
+                if (state.history.length === 0) {
+                    container.innerHTML = `<div class="text-center py-12 text-gray-500 italic">No recordings found. Complete a practice session to see results.</div>`;
+                    return;
+                }
+
+                container.innerHTML = state.history.map(s => `
+                    <div class="glass-card p-4 rounded-lg flex items-center justify-between hover:bg-white/5 transition">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-[var(--color-primary)]/20 flex items-center justify-center text-[var(--color-primary)]">
+                                <i data-lucide="video" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold">${s.lecture}</h4>
+                                <div class="text-xs text-gray-400 flex gap-2">
+                                    <span>${new Date(s.timestamp).toLocaleDateString()}</span>
+                                    <span>•</span>
+                                    <span>${s.duration}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold ${s.score > 80 ? 'text-green-400' : 'text-yellow-400'}">${s.score}%</div>
+                            <div class="text-[10px] uppercase tracking-widest ${s.status.includes('Verified') ? 'text-green-500' : 'text-red-400'}">${s.status}</div>
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', app.init);
+    </script>
 </body>
 </html>
