@@ -201,17 +201,27 @@
     </video>
 
     <!-- Overlay -->
-    <div class="absolute inset-0 bg-black/30 z-0"></div>
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"></div>
 
-    <header class="fixed top-0 w-full z-50 px-8 py-6 flex items-center justify-between glass-card !border-x-0 !border-t-0 !rounded-none">
-        <div class="flex items-center gap-2 cursor-pointer" onclick="router.navigate('entry')">
-            <i data-lucide="feather" class="text-[var(--color-primary)]"></i>
-            <span class="font-display font-bold text-xl tracking-wide">KALADRISHTI</span>
-        </div>
-        <div class="text-sm uppercase tracking-widest text-[var(--color-text-muted)] hidden md:block">
-            Select Form
-        </div>
-    </header>
+    <header class="fixed top-0 w-full z-50 px-8 py-6 relative flex items-center 
+glass-card !border-x-0 !border-t-0 !rounded-none 
+border-b border-[var(--color-primary)]/20">
+
+
+    <!-- Left Logo -->
+    <div class="flex items-center gap-2 cursor-pointer z-10" onclick="router.navigate('entry')">
+        <i data-lucide="feather" class="text-[var(--color-primary)]"></i>
+        <span class="font-display font-bold text-xl tracking-wide">KALADRISHTI</span>
+    </div>
+
+    <!-- Center Text -->
+   <div class="absolute left-1/2 -translate-x-1/2 text-sm uppercase tracking-widest text-[var(--color-primary)] hidden md:block">
+    Select Form
+</div>
+
+
+</header>
+
 
     <main class="relative z-10 pt-32 pb-12 px-8 md:px-12 w-full max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="dance-grid"></div>
@@ -222,7 +232,7 @@
 
 
 
-    <!-- ============================================== -->
+ <!-- ============================================== -->
 <!-- VIEW 4: DASHBOARD -->
 <!-- ============================================== -->
 <div id="view-dashboard" class="view-section relative h-screen w-full overflow-hidden bg-[var(--color-bg-dark)] hidden">
@@ -238,29 +248,60 @@
     <div class="relative z-10 h-full w-full max-w-4xl mx-auto px-6 md:px-12 flex flex-col justify-end pb-12 md:pb-20">
 
         <div class="mb-8">
+
+            <!-- Upgraded Back Button -->
             <button onclick="router.navigate('selection')"
-                class="group flex items-center gap-2 text-sm text-white/70 hover:text-white mb-6 transition-colors backdrop-blur-sm bg-black/20 px-3 py-1 rounded-full w-fit border border-white/10">
+                class="group flex items-center gap-2 text-sm text-[var(--color-primary)] 
+                hover:translate-x-1 transition-all duration-300 
+                backdrop-blur-sm bg-black/20 px-4 py-2 rounded-full 
+                w-fit border border-[var(--color-primary)]/20">
                 <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
                 Back to Selection
             </button>
 
+            <!-- Title -->
             <h1 id="dashboard-title"
-                class="text-5xl md:text-7xl font-display text-white mb-2 tracking-tight drop-shadow-lg">
+                class="text-5xl md:text-7xl font-display text-white tracking-tight drop-shadow-lg mt-6">
                 Loading...
             </h1>
 
-            <div id="dashboard-meta" class="text-lg text-white/80 font-light flex items-center gap-2">
+            <!-- Gold Divider -->
+            <div class="w-24 h-[2px] bg-[var(--color-primary)] mt-4 mb-6"></div>
+
+            <!-- Description -->
+            <p id="dashboard-description"
+                class="text-[var(--color-text-muted)] max-w-xl leading-relaxed mb-8">
+                Discover the divine grammar of movement, expression, and rhythm.
+            </p>
+
+            <!-- Progress Section -->
+            <div class="mb-6">
+                <div class="flex justify-between text-sm text-[var(--color-text-muted)] mb-2">
+                    <span>Progress</span>
+                    <span id="progress-percent">0%</span>
                 </div>
+                <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                    <div id="progress-bar"
+                        class="h-full bg-[var(--color-primary)] w-0 transition-all duration-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meta -->
+            <div id="dashboard-meta" class="text-lg text-white/80 font-light flex items-center gap-2">
+            </div>
         </div>
 
+        <!-- Curriculum Section -->
         <div class="w-full">
             <h3 class="text-xl font-display text-white mb-4 opacity-90">Curriculum</h3>
 
             <div id="lecture-list" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 scrollbar-hide">
-                </div>
+            </div>
         </div>
     </div>
 </div>
+
 
     <!-- ============================================== -->
     <!-- VIEW 5: LECTURE / PRACTICE / RESULTS -->
@@ -555,10 +596,10 @@ function resizeTutorial(action) {
 
         const LECTURES = {
     bharatanatyam: [
-        { id: 1, title: "1", duration: "8 min", desc: "Lecture 1", video: "media/vid/BH1.mp4" },
-        { id: 2, title: "2", duration: "10 min", desc: "Lecture 2", video: "media/vid/BH2.mp4" },
-        { id: 3, title: "3", duration: "12 min", desc: "Lecture 3", video: "media/vid/BH3.mp4" },
-        { id: 4, title: "4", duration: "15 min", desc: "Lecture 4", video: "media/vid/BH4.mp4" },
+        { id: 1, title: "1", duration: "3 min", desc: "Lecture 1", video: "media/vid/BH1.mp4" },
+        { id: 2, title: "2", duration: "3 min", desc: "Lecture 2", video: "media/vid/BH2.mp4" },
+        { id: 3, title: "3", duration: "2 min", desc: "Lecture 3", video: "media/vid/BH3.mp4" },
+        { id: 4, title: "4", duration: "8 min", desc: "Lecture 4", video: "media/vid/BH4.mp4" },
     ],
 
     kathak: [
@@ -667,7 +708,14 @@ function resizeTutorial(action) {
             renderDances: () => {
                 const grid = document.getElementById('dance-grid');
                 grid.innerHTML = DANCES.map(d => `
-                    <div onclick="app.selectDance('${d.id}')" class="group relative h-52 rounded-sm overflow-hidden cursor-pointer shadow-2xl border border-white/5 hover:border-[var(--color-primary)] transition-all">
+                    <div onclick="app.selectDance('${d.id}')" 
+class="group relative h-52 rounded-xl overflow-hidden cursor-pointer 
+shadow-2xl border border-white/5 
+transition-all duration-500 
+hover:scale-105 
+hover:border-[var(--color-primary)] 
+hover:shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+
                         <img src="${d.img}" class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="${d.name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1518131393663-39c2f6d62325?q=80&w=600'">
                         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
                         <div class="absolute bottom-0 left-0 p-6">
@@ -721,6 +769,14 @@ function resizeTutorial(action) {
     const danceLectures = LECTURES[state.dance.id];
 
     state.lecture = danceLectures.find(l => l.id === id);
+
+    // ✅ UPDATE PROGRESS HERE
+    const totalLectures = danceLectures.length;
+    const currentIndex = state.lecture.id;
+    const percent = Math.floor((currentIndex / totalLectures) * 100);
+
+    document.getElementById("progress-bar").style.width = percent + "%";
+    document.getElementById("progress-percent").innerText = percent + "%";
 
     document.getElementById('lecture-nav-title').innerText = state.lecture.title;
 
