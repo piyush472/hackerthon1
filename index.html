@@ -5,24 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaladrishti | The Divine Art of Dance</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,400&family=Montserrat:wght@200;400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- MediaPipe Holistic Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
 
-    <!-- App Configuration & Styles -->
     <style>
         :root {
             --color-bg-dark: #0f0c0b;
@@ -111,16 +104,25 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* Modal for video playback */
+        .video-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
 
-    <!-- ============================================== -->
     <!-- VIEW 1: LANDING -->
-    <!-- ============================================== -->
     <div id="view-landing" class="view-section active items-center justify-center">
         <div class="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1543165365-072114002636?q=80&w=2000&auto=format&fit=crop" class="w-full h-full object-cover opacity-40" alt="Classical Dance Mood">
+            <img src="https://images.unsplash.com/photo-1543165365-072114002636?q=80&w=2000&auto=format&fit=crop" class="w-full h-full object-cover opacity-40" alt="">
             <div class="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-dark)] via-transparent to-black opacity-90"></div>
         </div>
         <div class="relative z-10 text-center p-8 animate-fade-up">
@@ -349,7 +351,7 @@
                 <div class="flex items-end justify-between mb-8 border-b border-white/10 pb-4">
                     <div>
                         <h2 class="text-4xl font-display text-white">Performance Report</h2>
-                        <p class="text-[var(--color-text-muted)] text-sm mt-2">Verified by Kaladrishti AI API</p>
+                        <p class="text-[var(--color-text-muted)] text-sm mt-2">Verified by Kaladrishti AI</p>
                     </div>
                     <div class="text-right">
                         <div class="text-3xl font-bold text-[var(--color-primary)]" id="total-score-display">0</div>
@@ -357,7 +359,7 @@
                     </div>
                 </div>
                 <div id="results-list" class="grid gap-4">
-                    <div class="text-center py-12 text-gray-500 italic">No recordings found. Complete a practice session to see results.</div>
+                    <!-- Recordings will be injected here -->
                 </div>
             </div>
         </main>
@@ -372,10 +374,8 @@
         </div>
     </div>
 
-    <!-- ============================================== -->
-    <!-- JAVASCRIPT LOGIC -->
-    <!-- ============================================== -->
-    
+    <!-- JAVASCRIPT LOGIC (WITH VIDEO RECORDING IN RESULTS) -->
+    <script>
         // --- API INTEGRATION CLASS ---
         class KaladrishtiAPI {
             constructor(baseUrl) {
@@ -436,7 +436,6 @@
                 { id: 3, title: "3", duration: "2 min", desc: "Lecture 3", video: "media/vid/BH3.mp4" },
                 { id: 4, title: "4", duration: "8 min", desc: "Lecture 4", video: "media/vid/BH4.mp4" },
             ],
-            // ... other dances same as before ...
         };
 
         const state = {
@@ -457,20 +456,14 @@
             bhumiStage: 0,
             stageStartTime: null,
             stageHoldDuration: 1.5,
-            userPoseBuffer: [],           // last ~2 seconds of user poses
-            referenceSequence: []         // loaded from JSON
+            userPoseBuffer: [],
+            referenceSequence: [],
+            recordedVideos: JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]')  // NEW
         };
 
         const router = {
             navigate: (viewId) => {
-                document.querySelectorAll('.view-section').forEach(el => {
-                    el.classList.remove('active');
-                    if(el.classList.contains('animate-fade-up')) {
-                        el.classList.remove('animate-fade-up');
-                        void el.offsetWidth;
-                        el.classList.add('animate-fade-up');
-                    }
-                });
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
                 document.getElementById(`view-${viewId}`).classList.add('active');
                 state.view = viewId;
                 if(viewId !== 'lecture') app.stopCamera();
@@ -485,16 +478,17 @@
                 app.renderDances();
                 state.history = await practiceSessionsDB.find();
 
-                // Load reference JSON from public/
                 try {
-                    const res = await fetch('/bhumi_reference.json');
-                    if (!res.ok) throw new Error("Failed to load reference");
-                    state.referenceSequence = await res.json();
-                    console.log(`Reference loaded: ${state.referenceSequence.length} frames`);
+                    const response = await fetch('/bhumi_reference.json');
+                    if (!response.ok) throw new Error(`Failed to load JSON: ${response.status}`);
+                    state.referenceSequence = await response.json();
+                    console.log(`Reference loaded successfully! Frames: ${state.referenceSequence.length}`);
                 } catch (err) {
-                    console.error("Reference JSON load failed:", err);
-                    alert("Could not load bhumi_reference.json. Check file path in public/");
+                    console.error("Failed to load bhumi_reference.json:", err);
                 }
+
+                // Load saved videos
+                state.recordedVideos = JSON.parse(localStorage.getItem('kaladrishti_recordings') || '[]');
 
                 setTimeout(() => {
                     document.getElementById('view-landing').style.display = 'none';
@@ -556,7 +550,6 @@
                 pracVid.querySelector("source").src = state.lecture.video;
                 pracVid.load();
 
-                // Reset Bhumi Pranam state
                 state.bhumiStage = 0;
                 state.stageStartTime = null;
                 state.poseConfirmed = false;
@@ -697,48 +690,44 @@
 
                 app.analyzeExpression(results.faceLandmarks);
 
-                // === REAL-TIME COMPARISON WITH REFERENCE JSON ===
                 if (state.dance?.id === 'bharatanatyam' && state.lecture?.id === 1 && state.referenceSequence.length > 0) {
                     const bhumi = app.detectBhumiPranam(results);
                     const feedback = document.getElementById('ai-feedback');
 
-                    // Add current pose to buffer
                     if (results.poseLandmarks) {
                         state.userPoseBuffer.push(results.poseLandmarks);
-                        if (state.userPoseBuffer.length > 60) state.userPoseBuffer.shift(); // ~2 seconds buffer
+                        if (state.userPoseBuffer.length > 60) state.userPoseBuffer.shift();
                     }
 
                     let matchPercent = 0;
                     let errorHighlights = [];
 
                     if (results.poseLandmarks && state.referenceSequence.length > 0) {
-                        // Pick reference frame based on stage (simple heuristic)
                         const refIndex = Math.min(Math.floor(state.bhumiStage * (state.referenceSequence.length / 4)), state.referenceSequence.length - 1);
                         const refFrame = state.referenceSequence[refIndex];
 
                         if (refFrame && refFrame.pose && refFrame.pose.length > 0) {
                             let totalError = 0;
-                            const keyJoints = [11, 12, 13, 14, 23, 24, 27, 28]; // shoulders, elbows, hips, ankles
+                            const keyJoints = [11, 12, 13, 14, 23, 24, 27, 28];
 
                             keyJoints.forEach(idx => {
-                                const userLm = results.poseLandmarks[idx];
-                                const refLm = refFrame.pose[idx];
-                                if (userLm && refLm) {
-                                    const dist = Math.hypot(userLm.x - refLm.x, userLm.y - refLm.y, (userLm.z || 0) - (refLm.z || 0));
+                                const u = results.poseLandmarks[idx];
+                                const r = refFrame.pose[idx];
+                                if (u && r) {
+                                    const dist = Math.hypot(u.x - r.x, u.y - r.y, (u.z || 0) - (r.z || 0));
                                     totalError += dist;
-                                    if (dist > 0.12) errorHighlights.push(userLm);
+                                    if (dist > 0.12) errorHighlights.push(u);
                                 }
                             });
 
                             const avgError = totalError / keyJoints.length;
-                            matchPercent = Math.max(0, 100 - Math.round(avgError * 500)); // tune multiplier as needed
+                            matchPercent = Math.max(0, 100 - Math.round(avgError * 500));
                         }
                     }
 
-                    // Update feedback with match %
                     if (bhumi.done) {
                         feedback.innerText = `${bhumi.step} (Match: ${matchPercent}%)`;
-                        feedback.className = "text-xs text-center italic text-green-400";
+                        feedback.className = "text-xs text-center italic text-green-400 font-bold bg-black/60 p-3 rounded";
                         state.currentScore = 100;
                         if (!state.autoAdvanced) {
                             state.autoAdvanced = true;
@@ -746,23 +735,17 @@
                         }
                     } else {
                         feedback.innerText = `${bhumi.step} (Match: ${matchPercent}%)`;
-                        feedback.className = "text-xs text-center italic text-yellow-400";
+                        feedback.className = "text-xs text-center italic text-yellow-400 font-bold bg-black/60 p-3 rounded";
                     }
 
-                    // Draw red highlights on mismatched joints
                     if (state.showLandmarks && errorHighlights.length > 0) {
                         drawLandmarks(ctx, errorHighlights, {color: 'red', lineWidth: 2, radius: 5});
                     }
                 }
 
                 const statusInd = document.getElementById('status-indicator');
-                if (analysis > 75) {
-                    statusInd.classList.remove('bg-red-500');
-                    statusInd.classList.add('bg-green-500');
-                } else {
-                    statusInd.classList.remove('bg-green-500');
-                    statusInd.classList.add('bg-red-500');
-                }
+                if (analysis > 75) statusInd.classList.replace('bg-red-500', 'bg-green-500') || statusInd.classList.add('bg-green-500');
+                else statusInd.classList.replace('bg-green-500', 'bg-red-500') || statusInd.classList.add('bg-red-500');
 
                 document.getElementById('ai-panel').classList.remove('translate-x-[150%]');
                 document.getElementById('cam-controls').style.opacity = '1';
@@ -776,65 +759,61 @@
                     video.srcObject.getTracks().forEach(t => t.stop());
                     video.srcObject = null;
                 }
+                
                 document.getElementById('camera-placeholder').style.display = 'flex';
                 document.getElementById('ai-panel').classList.add('translate-x-[150%]');
                 document.getElementById('cam-controls').style.opacity = '0';
                 document.getElementById('static-image-source').classList.add('hidden');
+                
                 const cvs = document.getElementById('output_canvas');
                 const ctx = cvs.getContext('2d');
                 ctx.clearRect(0,0,cvs.width,cvs.height);
             },
 
             analyzeExpression: (landmarks) => {
-                if (!landmarks) return;
-                const upper = landmarks[13];
-                const lower = landmarks[14];
+                if(!landmarks) return;
+                
+                const upper = landmarks[13]; const lower = landmarks[14];
                 const open = Math.abs(upper.y - lower.y);
-                const leftM = landmarks[61];
-                const rightM = landmarks[291];
+
+                const leftM = landmarks[61]; const rightM = landmarks[291];
                 const smile = Math.abs(leftM.x - rightM.x);
-                const browL = landmarks[107];
-                const browR = landmarks[336];
-                const eyeL = landmarks[159];
-                const eyeR = landmarks[386];
+
+                const browL = landmarks[107]; const browR = landmarks[336];
+                const eyeL = landmarks[159]; const eyeR = landmarks[386];
                 const browDist = (Math.abs(browL.y - eyeL.y) + Math.abs(browR.y - eyeR.y)) / 2;
 
                 const el = document.getElementById('val-expression');
                 const bar = document.getElementById('bar-expression');
-
+                
                 if (open > 0.08) {
-                    el.innerText = "Surprise / Chanting";
-                    el.style.color = "#eebc51";
-                    bar.style.width = "90%";
-                    bar.className = "h-full w-0 transition-all duration-300 bg-yellow-500";
+                    el.innerText = "Surprise / Chanting"; el.style.color = "#eebc51"; 
+                    bar.style.width = "90%"; bar.className = "h-full w-0 transition-all duration-300 bg-yellow-500";
                 } else if (smile > 0.5) {
-                    el.innerText = "Joy (Hasya)";
-                    el.style.color = "#4ade80";
-                    bar.style.width = "100%";
-                    bar.className = "h-full w-0 transition-all duration-300 bg-green-500";
+                    el.innerText = "Joy (Hasya)"; el.style.color = "#4ade80"; 
+                    bar.style.width = "100%"; bar.className = "h-full w-0 transition-all duration-300 bg-green-500";
                 } else if (browDist < 0.02) {
-                    el.innerText = "Anger (Raudra)";
-                    el.style.color = "#ff3333";
-                    bar.style.width = "80%";
-                    bar.className = "h-full w-0 transition-all duration-300 bg-red-600";
+                    el.innerText = "Anger (Raudra)"; el.style.color = "#ff3333"; 
+                    bar.style.width = "80%"; bar.className = "h-full w-0 transition-all duration-300 bg-red-600";
                 } else {
-                    el.innerText = "Serene / Neutral";
-                    el.style.color = "white";
-                    bar.style.width = "30%";
-                    bar.className = "h-full w-0 transition-all duration-300 bg-purple-500";
+                    el.innerText = "Serene / Neutral"; el.style.color = "white"; 
+                    bar.style.width = "30%"; bar.className = "h-full w-0 transition-all duration-300 bg-purple-500";
                 }
             },
 
             analyzePosture: (landmarks) => {
-                if (!landmarks) return 0;
+                if(!landmarks) return 0;
+                
                 const nose = landmarks[0];
                 const leftHip = landmarks[23];
                 const rightHip = landmarks[24];
                 const centerHip = (leftHip.x + rightHip.x)/2;
                 const spineScore = Math.max(0, 100 - (Math.abs(nose.x - centerHip) * 600));
+                
                 const leftShoulder = landmarks[11];
                 const rightShoulder = landmarks[12];
                 const shoulderScore = Math.max(0, 100 - (Math.abs(leftShoulder.y - rightShoulder.y) * 400));
+                
                 const leftElbow = landmarks[13];
                 const rightElbow = landmarks[14];
                 const armSpread = Math.abs(leftElbow.x - rightElbow.x);
@@ -842,19 +821,19 @@
 
                 const finalScore = Math.floor((spineScore * 0.4) + (shoulderScore * 0.4) + (armScore * 0.2));
                 state.currentScore = finalScore;
-
+                
                 document.getElementById('val-posture').innerText = finalScore + "%";
                 document.getElementById('bar-posture').style.width = finalScore + "%";
-
+                
                 const feedback = document.getElementById('ai-feedback');
-                if (finalScore > 75) {
-                    feedback.innerText = "Excellent posture.";
+                if(finalScore > 75) {
+                    feedback.innerText = "Excellent posture."; 
                     feedback.className = "text-xs text-center italic text-green-400";
                 } else {
-                    feedback.innerText = "Adjust alignment.";
+                    feedback.innerText = "Adjust alignment."; 
                     feedback.className = "text-xs text-center italic text-red-400";
                 }
-
+                
                 return finalScore;
             },
 
@@ -862,7 +841,7 @@
                 if (!results.poseLandmarks || !results.leftHandLandmarks || !results.rightHandLandmarks) {
                     state.bhumiStage = 0;
                     state.stageStartTime = null;
-                    return { done: false, step: "Full body not visible — stand farther back or adjust camera" };
+                    return { done: false, step: "Pura sharir camera mein dikhao 🙏 Sir se pair tak lao ya camera adjust karo" };
                 }
 
                 const pose = results.poseLandmarks;
@@ -889,14 +868,14 @@
 
                 let errors = [];
 
-                if (state.bhumiStage === 0) {  // Anjali Hasta
+                if (state.bhumiStage === 0) {
                     const palmsClose = Math.abs(leftWrist.x - rightWrist.x) < 0.06;
                     const palmsAtChest = Math.abs(leftWrist.y - chestY) < tolerance && Math.abs(rightWrist.y - chestY) < tolerance;
                     const upright = Math.abs(nose.y - chestY) < 0.18;
 
-                    if (!palmsClose) errors.push({type: 'hands', msg: 'Join palms tighter'});
-                    if (!palmsAtChest) errors.push({type: 'hands', msg: 'Raise hands to chest level'});
-                    if (!upright) errors.push({type: 'back', msg: 'Stand straight'});
+                    if (!palmsClose) errors.push("Haathon ko aur tight jodo");
+                    if (!palmsAtChest) errors.push("Haathon ko chhati ke level tak uthao");
+                    if (!upright) errors.push("Seedha khade raho");
 
                     if (palmsClose && palmsAtChest && upright) {
                         if (!state.stageStartTime) state.stageStartTime = now;
@@ -904,20 +883,20 @@
                         if (hold >= state.stageHoldDuration) {
                             state.bhumiStage = 1;
                             state.stageStartTime = null;
-                            return { done: false, step: "Great! Anjali Hasta locked. Now bow forward slowly.", errors: [] };
+                            return { done: false, step: "Shandar! Anjali Mudra perfect. Ab dheere se jhuk jao." };
                         }
-                        return { done: false, step: `Hold prayer hands at chest for ${(state.stageHoldDuration - hold).toFixed(1)}s`, errors };
+                        return { done: false, step: `Anjali Mudra hold karo ${(state.stageHoldDuration - hold).toFixed(1)}s aur` };
                     }
                     state.stageStartTime = null;
-                    return { done: false, step: "Step 1: Join palms in Anjali Hasta at chest level (like Namaste)", errors };
+                    return { done: false, step: "Step 1: Haathon ko jod kar chhati ke samne rakho (Namaste mudra)" };
                 }
 
-                if (state.bhumiStage === 1) {  // Bow
+                if (state.bhumiStage === 1) {
                     const torsoBent = nose.y > chestY + 0.08 && nose.y < hipY;
                     const handsLower = leftWrist.y > chestY + 0.15 && rightWrist.y > chestY + 0.15;
 
-                    if (!torsoBent) errors.push({type: 'back', msg: 'Bend forward more'});
-                    if (!handsLower) errors.push({type: 'hands', msg: 'Lower your hands'});
+                    if (!torsoBent) errors.push("Aur aage jhuko");
+                    if (!handsLower) errors.push("Haathon ko aur neeche lao");
 
                     if (torsoBent && handsLower) {
                         if (!state.stageStartTime) state.stageStartTime = now;
@@ -925,20 +904,20 @@
                         if (hold >= state.stageHoldDuration) {
                             state.bhumiStage = 2;
                             state.stageStartTime = null;
-                            return { done: false, step: "Perfect bow! Now reach down to touch the earth.", errors: [] };
+                            return { done: false, step: "Jhukav perfect! Ab haathon se zameen chhuo." };
                         }
-                        return { done: false, step: `Hold bow ${(state.stageHoldDuration - hold).toFixed(1)}s more`, errors };
+                        return { done: false, step: `Jhuk kar ${(state.stageHoldDuration - hold).toFixed(1)}s hold karo` };
                     }
                     state.stageStartTime = null;
-                    return { done: false, step: "Step 2: Bend forward from waist, lower hands", errors };
+                    return { done: false, step: "Step 2: Kamar se aage jhukiye aur haath neeche lao" };
                 }
 
-                if (state.bhumiStage === 2) {  // Touch earth
+                if (state.bhumiStage === 2) {
                     const handsNearGround = leftWrist.y > ankleY - 0.10 && rightWrist.y > ankleY - 0.10;
                     const deepBend = nose.y > hipY - 0.05;
 
-                    if (!handsNearGround) errors.push({type: 'hands', msg: 'Reach hands closer to ground'});
-                    if (!deepBend) errors.push({type: 'back', msg: 'Bend deeper'});
+                    if (!handsNearGround) errors.push("Haathon ko zameen ke aur kareeb lao");
+                    if (!deepBend) errors.push("Aur gehra jhuk jao");
 
                     if (handsNearGround && deepBend) {
                         if (!state.stageStartTime) state.stageStartTime = now;
@@ -946,14 +925,14 @@
                         if (hold >= 2) {
                             state.poseConfirmed = true;
                             state.bhumiStage = 3;
-                            return { done: true, step: "Bhumi Pranam Complete! 🙏 Excellent.", errors: [] };
+                            return { done: true, step: "Bhumi Pranam pura! Bahut badhiya 🙏" };
                         }
-                        return { done: false, step: `Hold touch ${(2 - hold).toFixed(1)}s`, errors };
+                        return { done: false, step: `Zameen chhute hue ${(2 - hold).toFixed(1)}s hold karo` };
                     }
-                    return { done: false, step: "Step 3: Bend fully & touch floor with hands", errors };
+                    return { done: false, step: "Step 3: Pura jhuk kar haathon se zameen chhuo" };
                 }
 
-                return { done: true, step: "Bhumi Pranam Completed 🙏", errors: [] };
+                return { done: true, step: "Bhumi Pranam pura ho gaya 🙏 Shandar!" };
             },
 
             toggleRecording: () => {
@@ -968,8 +947,12 @@
                     btn.classList.add("scale-110", "ring-4", "ring-red-900");
 
                     state.recordedChunks = [];
-                    if (!video.srcObject) return alert("Camera not started!");
-                    
+                    if (!video.srcObject) {
+                        alert("Camera start karo pehle!");
+                        state.recording = false;
+                        return;
+                    }
+
                     state.mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: "video/webm" });
 
                     state.mediaRecorder.ondataavailable = (e) => {
@@ -979,14 +962,9 @@
                     state.mediaRecorder.onstop = () => {
                         const blob = new Blob(state.recordedChunks, { type: "video/webm" });
                         const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.style.display = 'none';
-                        a.href = url;
-                        a.download = `${state.dance?.name || 'dance'}-${Date.now()}.webm`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
+
+                        // Save to results list instead of download
+                        app.saveRecordingToResults(blob, url);
                     };
 
                     state.mediaRecorder.start();
@@ -998,9 +976,131 @@
                     if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
                         state.mediaRecorder.stop();
                     }
-
-                    app.submitToDatabase();
                 }
+            },
+
+            // NEW: Save recording to results
+            saveRecordingToResults: (blob, url) => {
+                const durationSec = Math.round((new Date() - state.recordStartTime) / 1000);
+                const duration = `${Math.floor(durationSec / 60)}m ${durationSec % 60}s`;
+                const date = new Date().toLocaleString();
+
+                const recording = {
+                    id: Date.now(),
+                    dance: state.dance?.name || 'Unknown',
+                    lecture: state.lecture?.title || 'Unknown',
+                    duration,
+                    score: state.currentScore,
+                    date,
+                    videoUrl: url  // this is what we'll use to play
+                };
+
+                // Add to state
+                state.recordedVideos.push(recording);
+
+                // Save to localStorage (persists across refreshes)
+                localStorage.setItem('kaladrishti_recordings', JSON.stringify(state.recordedVideos));
+
+                // Also add basic info to mock DB
+                practiceSessionsDB.insertOne({
+                    dance: recording.dance,
+                    lecture: recording.lecture,
+                    duration: recording.duration,
+                    score: recording.score,
+                    status: recording.score > 80 ? "Verified ✅" : "Correction Needed ⚠️",
+                    timestamp: date
+                });
+
+                // Refresh results
+                app.renderResults();
+                app.switchTab('results');
+            },
+
+            renderResults: () => {
+                const container = document.getElementById('results-list');
+                const totalDisplay = document.getElementById('total-score-display');
+
+                // Use state.recordedVideos + DB history
+                const recordings = state.recordedVideos;
+                totalDisplay.innerText = recordings.length + state.history.length;
+
+                if (recordings.length === 0 && state.history.length === 0) {
+                    container.innerHTML = `<div class="text-center py-12 text-gray-500 italic">No recordings found yet. Record a practice session!</div>`;
+                    return;
+                }
+
+                let html = '';
+
+                // Show recorded videos first
+                recordings.forEach(r => {
+                    html += `
+                        <div class="glass-card p-4 rounded-lg flex flex-col md:flex-row items-center justify-between hover:bg-white/5 transition mb-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-[var(--color-primary)]/20 flex items-center justify-center text-[var(--color-primary)]">
+                                    <i data-lucide="video" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold">${r.lecture} (${r.dance})</h4>
+                                    <div class="text-xs text-gray-400 flex gap-2">
+                                        <span>${r.date}</span>
+                                        <span>•</span>
+                                        <span>${r.duration}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right flex flex-col gap-2 mt-3 md:mt-0">
+                                <div class="text-xl font-bold ${r.score > 80 ? 'text-green-400' : 'text-yellow-400'}">${r.score}%</div>
+                                <button onclick="app.playRecordedVideo('${r.videoUrl}')" 
+                                        class="px-6 py-2 bg-[var(--color-primary)] text-black rounded-full hover:bg-[var(--color-primary-dim)] transition">
+                                    Play Video
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Add DB entries (without video)
+                state.history.forEach(s => {
+                    html += `
+                        <div class="glass-card p-4 rounded-lg flex items-center justify-between hover:bg-white/5 transition">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-[var(--color-primary)]/20 flex items-center justify-center text-[var(--color-primary)]">
+                                    <i data-lucide="video" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold">${s.lecture}</h4>
+                                    <div class="text-xs text-gray-400 flex gap-2">
+                                        <span>${new Date(s.timestamp).toLocaleDateString()}</span>
+                                        <span>•</span>
+                                        <span>${s.duration}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold ${s.score > 80 ? 'text-green-400' : 'text-yellow-400'}">${s.score}%</div>
+                                <div class="text-[10px] uppercase tracking-widest ${s.status.includes('Verified') ? 'text-green-500' : 'text-red-400'}">${s.status}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+                lucide.createIcons();
+            },
+
+            playRecordedVideo: (url) => {
+                const modal = document.createElement('div');
+                modal.className = 'video-modal';
+                modal.innerHTML = `
+                    <div class="relative w-11/12 max-w-5xl bg-black rounded-xl overflow-hidden shadow-2xl">
+                        <button onclick="this.closest('.video-modal').remove()" 
+                                class="absolute top-4 right-4 z-10 bg-red-600 text-white px-5 py-2 rounded-full hover:bg-red-700 transition">
+                            Close
+                        </button>
+                        <video controls autoplay class="w-full max-h-[80vh]" src="${url}"></video>
+                    </div>
+                `;
+                document.body.appendChild(modal);
             },
 
             submitToDatabase: async () => {
@@ -1010,7 +1110,7 @@
                 const duration = Math.round((new Date() - state.recordStartTime) / 1000);
                 const payload = {
                     userId: 'user_123',
-                    lectureId: state.lecture.id,
+                    lectureId: state.lecture?.id,
                     score: state.currentScore,
                     duration: duration,
                     timestamp: new Date().toISOString()
@@ -1019,8 +1119,8 @@
                 const apiResponse = await api.sendAnalysisData(payload);
                 
                 await practiceSessionsDB.insertOne({
-                    dance: state.dance.name,
-                    lecture: state.lecture.title,
+                    dance: state.dance?.name,
+                    lecture: state.lecture?.title,
                     duration: `${Math.floor(duration/60)}m ${duration%60}s`,
                     score: state.currentScore,
                     status: apiResponse.data.verified ? "Verified ✅" : "Correction Needed ⚠️"
@@ -1029,40 +1129,6 @@
                 state.history = await practiceSessionsDB.find();
                 modal.classList.add('hidden');
                 app.switchTab('results');
-            },
-
-            renderResults: () => {
-                const container = document.getElementById('results-list');
-                const totalDisplay = document.getElementById('total-score-display');
-                totalDisplay.innerText = state.history.length;
-
-                if (state.history.length === 0) {
-                    container.innerHTML = `<div class="text-center py-12 text-gray-500 italic">No recordings found. Complete a practice session to see results.</div>`;
-                    return;
-                }
-
-                container.innerHTML = state.history.map(s => `
-                    <div class="glass-card p-4 rounded-lg flex items-center justify-between hover:bg-white/5 transition">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full bg-[var(--color-primary)]/20 flex items-center justify-center text-[var(--color-primary)]">
-                                <i data-lucide="video" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-white font-bold">${s.lecture}</h4>
-                                <div class="text-xs text-gray-400 flex gap-2">
-                                    <span>${new Date(s.timestamp).toLocaleDateString()}</span>
-                                    <span>•</span>
-                                    <span>${s.duration}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xl font-bold ${s.score > 80 ? 'text-green-400' : 'text-yellow-400'}">${s.score}%</div>
-                            <div class="text-[10px] uppercase tracking-widest ${s.status.includes('Verified') ? 'text-green-500' : 'text-red-400'}">${s.status}</div>
-                        </div>
-                    </div>
-                `).join('');
-                lucide.createIcons();
             }
         };
 
