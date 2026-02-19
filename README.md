@@ -1,4 +1,5 @@
-# Indian Classical Dance Learning - MediaPipe
+# Indian Classical Dance Learning - MediaPipe.
+
 
 A web-based application that uses **MediaPipe** to teach classical Indian dance forms with real-time pose detection and visual feedback.
 
