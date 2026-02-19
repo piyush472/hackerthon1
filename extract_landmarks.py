@@ -1,5 +1,5 @@
 # extract_landmarks.py
-# Yeh file sirf ek baar run karni hai – reference JSON banane ke liye
+
 
 import cv2
 import mediapipe as mp
